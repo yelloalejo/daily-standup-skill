@@ -4,12 +4,26 @@ set -euo pipefail
 # ─────────────────────────────────────────────
 # Daily Standup Skill — Installer
 # https://github.com/yelloalejo/daily-standup-skill
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/yelloalejo/daily-standup-skill/main/install.sh | bash
+#   curl ... | bash -s -- --global                    # Install globally (default)
+#   curl ... | bash -s -- --workspace my-workspace    # Install to specific Craft Agent workspace
+#   curl ... | bash -s -- --skip-config               # Skip interactive config (set up later via /daily-standup)
 # ─────────────────────────────────────────────
 
 REPO_URL="https://github.com/yelloalejo/daily-standup-skill"
 RAW_URL="https://raw.githubusercontent.com/yelloalejo/daily-standup-skill/main"
-CRAFT_DIR="$HOME/.craft-agent/workspaces"
 SKILL_SLUG="daily-standup"
+
+# Install targets
+GLOBAL_SKILLS_DIR="$HOME/.agents/skills"
+CRAFT_DIR="$HOME/.craft-agent/workspaces"
+
+# Flags
+INSTALL_MODE=""          # "global" or "workspace"
+TARGET_WORKSPACE=""      # specific workspace name
+SKIP_CONFIG=false
 
 # Colors
 RED='\033[0;31m'
@@ -20,6 +34,44 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
+
+# ─── Argument parsing ───────────────────────
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --global|-g)
+        INSTALL_MODE="global"
+        shift
+        ;;
+      --workspace|-w)
+        INSTALL_MODE="workspace"
+        TARGET_WORKSPACE="${2:-}"
+        shift 2
+        ;;
+      --skip-config)
+        SKIP_CONFIG=true
+        shift
+        ;;
+      --help|-h)
+        echo "Usage: install.sh [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  --global, -g              Install globally (~/.agents/skills/) — works with all agents"
+        echo "  --workspace, -w <name>    Install to a specific Craft Agent workspace"
+        echo "  --skip-config             Skip config wizard (configure later via /daily-standup)"
+        echo "  --help, -h                Show this help"
+        exit 0
+        ;;
+      *)
+        echo -e "${RED}Unknown option: $1${NC}"
+        exit 1
+        ;;
+    esac
+  done
+}
+
+# ─── UI helpers ─────────────────────────────
 
 print_banner() {
   echo ""
@@ -49,7 +101,6 @@ prompt() {
 
 check_dependencies() {
   local missing=()
-  if ! command -v git &>/dev/null; then missing+=("git"); fi
   if ! command -v curl &>/dev/null; then missing+=("curl"); fi
 
   if [ ${#missing[@]} -gt 0 ]; then
@@ -59,40 +110,87 @@ check_dependencies() {
   fi
 }
 
-detect_workspace() {
-  if [ ! -d "$CRAFT_DIR" ]; then
-    echo -e "${RED}✗ Craft Agent workspace not found at $CRAFT_DIR${NC}"
-    echo "  This installer targets Craft Agent. For other agents, use: npx skills add yelloalejo/daily-standup-skill"
-    exit 1
+# ─── Install target selection ───────────────
+
+choose_install_target() {
+  # If mode was set via flag, use it
+  if [ -n "$INSTALL_MODE" ]; then
+    if [ "$INSTALL_MODE" = "workspace" ] && [ -n "$TARGET_WORKSPACE" ]; then
+      setup_workspace_paths "$TARGET_WORKSPACE"
+      return
+    elif [ "$INSTALL_MODE" = "global" ]; then
+      setup_global_paths
+      return
+    fi
   fi
 
-  local workspaces=()
-  for dir in "$CRAFT_DIR"/*/; do
-    [ -d "$dir" ] && workspaces+=("$(basename "$dir")")
-  done
-
-  if [ ${#workspaces[@]} -eq 0 ]; then
-    echo -e "${RED}✗ No workspaces found in $CRAFT_DIR${NC}"
-    exit 1
-  elif [ ${#workspaces[@]} -eq 1 ]; then
-    WORKSPACE="${workspaces[0]}"
-    echo -e "  ${GREEN}✓${NC} Found workspace: ${BOLD}${WORKSPACE}${NC}"
-  else
-    echo -e "  Found ${#workspaces[@]} workspaces:"
-    for i in "${!workspaces[@]}"; do
-      echo -e "    ${BOLD}$((i+1)))${NC} ${workspaces[$i]}"
+  # Auto-detect available targets
+  local has_craft=false
+  local craft_workspaces=()
+  if [ -d "$CRAFT_DIR" ]; then
+    for dir in "$CRAFT_DIR"/*/; do
+      [ -d "$dir" ] && craft_workspaces+=("$(basename "$dir")")
     done
-    echo -ne "  ${BOLD}Select workspace${NC} ${DIM}(1)${NC}: "
-    read -r choice
-    choice="${choice:-1}"
-    WORKSPACE="${workspaces[$((choice-1))]}"
+    [ ${#craft_workspaces[@]} -gt 0 ] && has_craft=true
   fi
 
-  WORKSPACE_DIR="$CRAFT_DIR/$WORKSPACE"
-  SKILLS_DIR="$WORKSPACE_DIR/skills"
-  SOURCES_DIR="$WORKSPACE_DIR/sources"
-  SKILL_DIR="$SKILLS_DIR/$SKILL_SLUG"
+  echo -e "${BOLD}Where do you want to install?${NC}"
+  echo ""
+  echo -e "  ${BOLD}1)${NC} ${GREEN}Global${NC} ${DIM}(~/.agents/skills/)${NC}"
+  echo -e "     ${DIM}Works with Claude Code, Cursor, Craft Agent, and any SKILL.md agent${NC}"
+
+  if [ "$has_craft" = true ]; then
+    local idx=2
+    for ws in "${craft_workspaces[@]}"; do
+      echo -e "  ${BOLD}${idx})${NC} Craft Agent → ${BOLD}${ws}${NC}"
+      idx=$((idx + 1))
+    done
+  fi
+
+  echo ""
+  echo -ne "  ${BOLD}Select${NC} ${DIM}(1)${NC}: "
+  read -r choice
+  choice="${choice:-1}"
+
+  if [ "$choice" = "1" ]; then
+    setup_global_paths
+  elif [ "$has_craft" = true ] && [ "$choice" -ge 2 ] 2>/dev/null; then
+    local ws_idx=$((choice - 2))
+    if [ "$ws_idx" -lt "${#craft_workspaces[@]}" ]; then
+      setup_workspace_paths "${craft_workspaces[$ws_idx]}"
+    else
+      echo -e "${RED}Invalid selection${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${RED}Invalid selection${NC}"
+    exit 1
+  fi
 }
+
+setup_global_paths() {
+  SKILL_DIR="$GLOBAL_SKILLS_DIR/$SKILL_SLUG"
+  SOURCES_DIR=""  # No source install for global
+  INSTALL_LOCATION="global"
+  echo -e "  ${GREEN}✓${NC} Installing globally to ${BOLD}~/.agents/skills/${SKILL_SLUG}/${NC}"
+}
+
+setup_workspace_paths() {
+  local ws_name="$1"
+  local ws_dir="$CRAFT_DIR/$ws_name"
+
+  if [ ! -d "$ws_dir" ]; then
+    echo -e "${RED}✗ Workspace not found: $ws_name${NC}"
+    exit 1
+  fi
+
+  SKILL_DIR="$ws_dir/skills/$SKILL_SLUG"
+  SOURCES_DIR="$ws_dir/sources"
+  INSTALL_LOCATION="workspace:$ws_name"
+  echo -e "  ${GREEN}✓${NC} Installing to workspace ${BOLD}${ws_name}${NC}"
+}
+
+# ─── Download ───────────────────────────────
 
 download_file() {
   local src="$1"
@@ -100,6 +198,8 @@ download_file() {
   mkdir -p "$(dirname "$dest")"
   curl -fsSL "$RAW_URL/$src" -o "$dest"
 }
+
+# ─── Config wizard ──────────────────────────
 
 step_user_info() {
   echo -e "${BLUE}Step 1/4 — About you${NC}"
@@ -178,7 +278,7 @@ step_calendar_config() {
     detected_tz=$(timedatectl show -p Timezone --value 2>/dev/null || true)
   fi
   if [ -z "$detected_tz" ] && [ -f /etc/timezone ]; then
-    detected_tz=$(cat /etc/timezone)
+    detected_tz=$(cat /etc/timezone 2>/dev/null || true)
   fi
   if [ -z "$detected_tz" ] && command -v readlink &>/dev/null; then
     detected_tz=$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||' || true)
@@ -254,17 +354,17 @@ generate_config() {
 HEREDOC
 }
 
+# ─── Installation ───────────────────────────
+
 install_skill() {
   echo -e "${BOLD}Installing skill...${NC}"
 
   mkdir -p "$SKILL_DIR/adapters"
 
-  # Download skill files
   download_file "skills/daily-standup/SKILL.md" "$SKILL_DIR/SKILL.md"
   download_file "skills/daily-standup/icon.svg" "$SKILL_DIR/icon.svg"
   download_file "skills/daily-standup/config.example.json" "$SKILL_DIR/config.example.json"
 
-  # Download adapters
   for adapter in notion linear github-issues jira; do
     download_file "skills/daily-standup/adapters/${adapter}.md" "$SKILL_DIR/adapters/${adapter}.md"
   done
@@ -273,20 +373,20 @@ install_skill() {
 }
 
 install_sources() {
+  # Only install sources for workspace installs
+  if [ -z "$SOURCES_DIR" ]; then
+    return
+  fi
+
   echo -e "${BOLD}Installing source templates...${NC}"
 
-  # Always install GitHub source template
   local sources_to_install=("github")
 
-  # Add task provider source
   case "$TASK_PROVIDER" in
     notion) sources_to_install+=("notion") ;;
     linear) sources_to_install+=("linear") ;;
-    # github-issues uses the github source (already included)
-    # jira needs manual setup (API source)
   esac
 
-  # Add calendar source
   if [ "$CAL_PROVIDER" = "google-calendar" ]; then
     sources_to_install+=("google-calendar")
   fi
@@ -301,7 +401,6 @@ install_sources() {
       download_file "sources/${source}/guide.md" "$source_dir/guide.md"
       download_file "sources/${source}/permissions.json" "$source_dir/permissions.json"
 
-      # Generate unique ID
       local random_id
       random_id=$(LC_ALL=C tr -dc 'a-f0-9' < /dev/urandom | head -c 8)
       local slug_safe
@@ -316,57 +415,67 @@ install_sources() {
   done
 }
 
+# ─── Finish ─────────────────────────────────
+
 print_next_steps() {
   echo ""
   echo -e "${CYAN}══════════════════════════════════════════════${NC}"
   echo -e "${GREEN}${BOLD}✓ Installation complete!${NC}"
   echo -e "${CYAN}══════════════════════════════════════════════${NC}"
   echo ""
-  echo -e "${BOLD}Next steps — Authenticate your sources:${NC}"
-  echo ""
-  echo -e "  ${BOLD}1. GitHub${NC}"
-  echo "     Create a Personal Access Token (classic or fine-grained):"
-  echo "     https://github.com/settings/tokens"
-  echo "     Then update the token in your source config or paste it"
-  echo "     when your agent asks."
-  echo ""
 
-  case "$TASK_PROVIDER" in
-    notion)
-      echo -e "  ${BOLD}2. Notion${NC}"
-      echo "     Create an integration at: https://notion.so/my-integrations"
-      echo "     Share your task database with the integration."
-      echo "     Then update the token in your source config."
-      echo ""
-      ;;
-    linear)
-      echo -e "  ${BOLD}2. Linear${NC}"
-      echo "     Authenticate via OAuth when your agent prompts you."
-      echo ""
-      ;;
-    jira)
-      echo -e "  ${BOLD}2. Jira${NC}"
-      echo "     Create an API token at:"
-      echo "     https://id.atlassian.com/manage-profile/security/api-tokens"
-      echo "     You'll need to set up the Jira source manually in your agent."
-      echo ""
-      ;;
-  esac
-
-  if [ "$CAL_PROVIDER" = "google-calendar" ]; then
-    local step_num=3
-    [ "$TASK_PROVIDER" = "none" ] && step_num=2
-    echo -e "  ${BOLD}${step_num}. Google Calendar${NC}"
-    echo "     Create OAuth credentials at Google Cloud Console:"
-    echo "     https://console.cloud.google.com/apis/credentials"
-    echo "     Enable the Google Calendar API, then authenticate"
-    echo "     via OAuth in your agent."
+  if [ "$SKIP_CONFIG" = true ]; then
+    echo -e "  Config will be set up on first run via ${BOLD}/daily-standup${NC}"
     echo ""
+  fi
+
+  if [ -n "$SOURCES_DIR" ]; then
+    echo -e "${BOLD}Next steps — Authenticate your sources:${NC}"
+    echo ""
+    echo -e "  ${BOLD}1. GitHub${NC}"
+    echo "     Create a Personal Access Token (classic or fine-grained):"
+    echo "     https://github.com/settings/tokens"
+    echo "     Then update the token in your source config or paste it"
+    echo "     when your agent asks."
+    echo ""
+
+    case "${TASK_PROVIDER:-none}" in
+      notion)
+        echo -e "  ${BOLD}2. Notion${NC}"
+        echo "     Create an integration at: https://notion.so/my-integrations"
+        echo "     Share your task database with the integration."
+        echo "     Then update the token in your source config."
+        echo ""
+        ;;
+      linear)
+        echo -e "  ${BOLD}2. Linear${NC}"
+        echo "     Authenticate via OAuth when your agent prompts you."
+        echo ""
+        ;;
+      jira)
+        echo -e "  ${BOLD}2. Jira${NC}"
+        echo "     Create an API token at:"
+        echo "     https://id.atlassian.com/manage-profile/security/api-tokens"
+        echo "     You'll need to set up the Jira source manually in your agent."
+        echo ""
+        ;;
+    esac
+
+    if [ "${CAL_PROVIDER:-none}" = "google-calendar" ]; then
+      local step_num=3
+      [ "${TASK_PROVIDER:-none}" = "none" ] && step_num=2
+      echo -e "  ${BOLD}${step_num}. Google Calendar${NC}"
+      echo "     Create OAuth credentials at Google Cloud Console:"
+      echo "     https://console.cloud.google.com/apis/credentials"
+      echo "     Enable the Google Calendar API, then authenticate"
+      echo "     via OAuth in your agent."
+      echo ""
+    fi
   fi
 
   echo -e "${CYAN}──────────────────────────────────────────────${NC}"
   echo ""
-  echo -e "  Open your agent and type ${BOLD}/daily-standup${NC}"
+  echo -e "  Type ${BOLD}/daily-standup${NC} in your agent to get started"
   echo ""
   echo -e "  ${DIM}Skill: ${SKILL_DIR}${NC}"
   echo -e "  ${DIM}Repo:  ${REPO_URL}${NC}"
@@ -376,21 +485,24 @@ print_next_steps() {
 # ─── Main ───────────────────────────────────
 
 main() {
+  parse_args "$@"
   print_banner
   check_dependencies
 
-  echo -e "${BOLD}Detecting workspace...${NC}"
-  detect_workspace
+  choose_install_target
   echo ""
 
-  step_user_info
-  step_git_config
-  step_task_provider
-  step_calendar_config
-
   install_skill
-  generate_config
-  install_sources
+
+  if [ "$SKIP_CONFIG" = false ]; then
+    step_user_info
+    step_git_config
+    step_task_provider
+    step_calendar_config
+    generate_config
+    install_sources
+  fi
+
   print_next_steps
 }
 

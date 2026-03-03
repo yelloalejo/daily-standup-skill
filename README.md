@@ -14,11 +14,21 @@ An AI agent skill that generates your daily standup report by pulling data from 
 curl -fsSL https://raw.githubusercontent.com/yelloalejo/daily-standup-skill/main/install.sh | bash
 ```
 
-The installer will:
-1. Ask for your info (name, email, timezone)
-2. Let you pick your task management tool
-3. Install the skill and source templates
-4. Generate your personal `config.json`
+The installer lets you choose where to install:
+- **Global** (`~/.agents/skills/`) — works with Claude Code, Cursor, Craft Agent, and any SKILL.md-compatible agent
+- **Craft Agent workspace** — if detected, install to a specific workspace with source templates included
+
+You can also pass flags:
+```bash
+# Install globally (skip selection)
+curl ... | bash -s -- --global
+
+# Install to a specific Craft Agent workspace
+curl ... | bash -s -- --workspace my-workspace
+
+# Install skill only, configure later via /daily-standup
+curl ... | bash -s -- --global --skip-config
+```
 
 ### Using npx skills (skills.sh ecosystem)
 
@@ -26,7 +36,7 @@ The installer will:
 npx skills add yelloalejo/daily-standup-skill
 ```
 
-> Note: This installs only the skill files. You'll need to configure sources and `config.json` manually.
+> Installs the skill files globally. Configuration is done interactively on first run via `/daily-standup`.
 
 ## Usage
 
