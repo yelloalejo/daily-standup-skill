@@ -25,9 +25,9 @@ This skill needs the following MCP sources configured:
 
 If a connection fails during execution, show a clear message indicating which one is missing. Generate the summary with the sources that do work and warn about the missing ones at the end.
 
-## Step 0: Read user configuration
+## Step 0: Read or create user configuration
 
-**BEFORE doing anything else**, read the configuration file:
+**BEFORE doing anything else**, try to read the configuration file:
 
 ```
 Read: {skill_base_dir}/config.json
@@ -35,11 +35,41 @@ Read: {skill_base_dir}/config.json
 
 Where `{skill_base_dir}` is the base directory of this skill (provided as "Base directory for this skill" when invoked).
 
-The file `config.json` contains user preferences, git settings, task provider config, and calendar settings. See `config.example.json` for the full schema.
+### If `config.json` exists
 
-**If `config.json` does not exist**: Inform the user they need to create their personal configuration. Show the contents of `config.example.json` as reference and ask them to copy it as `config.json` with their data. Do not continue until it exists.
+Use its values in all following steps. References like `config.user.name` mean the value of that key in the JSON. Proceed to Step 1.
 
-Use the values from `config.json` in all following steps. In these instructions, references like `config.user.name` mean the value of that key in the JSON.
+### If `config.json` does NOT exist — Interactive Setup
+
+Run an interactive setup by asking the user a few quick questions. Keep it conversational and friendly.
+
+**Ask these questions (all at once, in a single message):**
+
+1. **Your name** — as it appears in git commits (e.g., "Diego Marulanda")
+2. **Git email** — the email you use for git
+3. **GitHub org/user and repo** — e.g., "mycompany/backend"
+4. **Task management tool** — Notion, Linear, GitHub Issues, Jira, or none
+5. **Google Calendar** — yes/no, and your calendar email(s)
+6. **Timezone** — e.g., America/New_York
+7. **Language** — en or es
+
+**After the user responds**, generate `config.json` automatically using the Write tool:
+
+- Parse their answers and map them to the config schema (see `config.example.json` for reference)
+- For the task provider, ask the one follow-up question needed:
+  - Notion → "What's your Notion database ID?" (explain: it's in the database URL after the workspace name)
+  - Linear → "What's your Linear team ID?"
+  - GitHub Issues → use the same owner/repo from git config, ask for their GitHub username
+  - Jira → "What's your Jira domain and project key?" (e.g., mycompany.atlassian.net, PROJ)
+- Set sensible defaults:
+  - `calendar.ignoredPatterns`: `["sync", "daily", "standup", "scrum", "lunch"]`
+  - `calendar.ignoredEventTypes`: `["outOfOffice"]`
+  - `fallback.noTasksMessage`: `"I'll review priorities and pick up a new task."` (en) or `"Voy a revisar prioridades para tomar una nueva tarea."` (es)
+- Write the file to `{skill_base_dir}/config.json`
+- Confirm to the user: "Config saved! Running your first daily standup..."
+- Then proceed to Step 1 normally.
+
+**Important**: Do NOT ask the user to manually edit JSON files. The setup must be conversational.
 
 ## Step 1: Determine dates
 
