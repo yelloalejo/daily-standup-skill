@@ -437,6 +437,7 @@ update_skill_files() {
   download_file "skills/daily-standup/SKILL.md" "$target_dir/SKILL.md"
   download_file "skills/daily-standup/icon.svg" "$target_dir/icon.svg"
   download_file "skills/daily-standup/config.example.json" "$target_dir/config.example.json"
+  download_file "VERSION" "$target_dir/VERSION"
 
   for adapter in notion linear github-issues jira; do
     download_file "skills/daily-standup/adapters/${adapter}.md" "$target_dir/adapters/${adapter}.md"
@@ -455,6 +456,7 @@ install_skill() {
   download_file "skills/daily-standup/SKILL.md" "$SKILL_DIR/SKILL.md"
   download_file "skills/daily-standup/icon.svg" "$SKILL_DIR/icon.svg"
   download_file "skills/daily-standup/config.example.json" "$SKILL_DIR/config.example.json"
+  download_file "VERSION" "$SKILL_DIR/VERSION"
 
   for adapter in notion linear github-issues jira; do
     download_file "skills/daily-standup/adapters/${adapter}.md" "$SKILL_DIR/adapters/${adapter}.md"
