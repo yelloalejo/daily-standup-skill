@@ -89,27 +89,13 @@ Ver [config.example.json](skills/daily-standup/config.example.json) para el esqu
 | `calendar.timezone` | Tu zona horaria (ej: `America/Bogota`) |
 | `output.language` | `en` o `es` |
 
-## Autenticación de Sources
+## Cómo funciona
 
-Después de instalar, necesitas autenticar cada source en tu agente:
+1. **Instalar** — via `npx skills add` o el instalador interactivo
+2. **Primera ejecución** — el skill auto-detecta tu nombre de git, repo y zona horaria. Solo pregunta 2 cosas: tu herramienta de tareas y si quieres calendario
+3. **Cada vez después** — solo escribe `/daily-standup` y listo
 
-### GitHub
-1. Crea un [Personal Access Token](https://github.com/settings/tokens) con acceso a repos
-2. Actualiza el token en `~/.craft-agent/.../sources/github/config.json`
-
-### Notion
-1. Crea una integración en [notion.so/my-integrations](https://notion.so/my-integrations)
-2. Comparte tu base de datos de tareas con la integración
-3. Actualiza el token en el config de la source
-
-### Linear
-1. La autenticación es via OAuth — tu agente te pedirá iniciar sesión
-
-### Google Calendar
-1. Crea credenciales OAuth en [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. Habilita la Google Calendar API
-3. Actualiza Client ID y Secret en el config de la source
-4. Autentícate via OAuth en tu agente
+La autenticación de sources (GitHub, Notion, etc.) la maneja tu agente automáticamente cuando se necesita — no hay que configurar tokens manualmente.
 
 ## Agregar un adapter personalizado
 

@@ -39,37 +39,69 @@ Where `{skill_base_dir}` is the base directory of this skill (provided as "Base 
 
 Use its values in all following steps. References like `config.user.name` mean the value of that key in the JSON. Proceed to Step 1.
 
-### If `config.json` does NOT exist — Interactive Setup
+### If `config.json` does NOT exist — Auto Setup
 
-Run an interactive setup by asking the user a few quick questions. Keep it conversational and friendly.
+Run a quick setup that auto-detects as much as possible and only asks what it can't figure out.
 
-**Ask these questions (all at once, in a single message):**
+#### Phase 1: Auto-detect from git (no questions needed)
 
-1. **Your name** — as it appears in git commits (e.g., "Diego Marulanda")
-2. **Git email** — the email you use for git
-3. **GitHub org/user and repo** — e.g., "mycompany/backend"
-4. **Task management tool** — Notion, Linear, GitHub Issues, Jira, or none
-5. **Google Calendar** — yes/no, and your calendar email(s)
-6. **Timezone** — e.g., America/New_York
-7. **Language** — en or es
+Run these commands silently via Bash:
+```bash
+git config user.name
+git config user.email
+git remote get-url origin
+```
 
-**After the user responds**, generate `config.json` automatically using the Write tool:
+From the remote URL, extract the GitHub owner and repo (e.g., `https://github.com/acme/backend.git` → owner: `acme`, repo: `backend`).
 
-- Parse their answers and map them to the config schema (see `config.example.json` for reference)
-- For the task provider, ask the one follow-up question needed:
-  - Notion → "What's your Notion database ID?" (explain: it's in the database URL after the workspace name)
-  - Linear → "What's your Linear team ID?"
-  - GitHub Issues → use the same owner/repo from git config, ask for their GitHub username
-  - Jira → "What's your Jira domain and project key?" (e.g., mycompany.atlassian.net, PROJ)
-- Set sensible defaults:
+Also detect the default branch:
+```bash
+git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
+```
+If that fails, default to `main`.
+
+Also detect timezone from the system (readlink /etc/localtime, timedatectl, etc.). Fall back to the timezone from the user's system prompt (USER'S DATE AND TIME offset).
+
+Also detect the user's preferred language from the system prompt or user preferences if available. Fall back to `en`.
+
+#### Phase 2: Ask only what's missing (one short message)
+
+Present what was auto-detected and ask only what's needed. Example message:
+
+> **Quick setup!** I detected:
+> - **Name:** Diego Marulanda
+> - **Repo:** onepay-ai/backend (main)
+> - **Timezone:** America/Bogota
+>
+> Just two questions:
+> 1. **What do you use for tasks?** (Notion / Linear / GitHub Issues / Jira / none)
+> 2. **Include Google Calendar?** (yes/no)
+
+If the user says Notion, Linear, GitHub Issues, or Jira, ask the ONE follow-up needed:
+- **Notion** → "What's your database ID? (it's the long string in the URL when you open the database, e.g., `notion.so/workspace/abc123...`)"
+- **Linear** → "What's your team key? (e.g., ENG, the prefix of your issue IDs like ENG-123)"
+- **GitHub Issues** → "What's your GitHub username?"
+- **Jira** → "What's your Jira URL and project key? (e.g., mycompany.atlassian.net, PROJ)"
+
+#### Phase 3: Generate config and continue
+
+After the user responds, generate `config.json` using the Write tool with:
+- Auto-detected values (name, email, owner, repo, branch, timezone, language)
+- User's answers (task provider, calendar)
+- Sensible defaults for everything else:
   - `calendar.ignoredPatterns`: `["sync", "daily", "standup", "scrum", "lunch"]`
   - `calendar.ignoredEventTypes`: `["outOfOffice"]`
+  - `calendar.provider`: `"google-calendar"` if yes, `"none"` if no
+  - `user.calendarEmails`: `[user.gitEmail]` (same email as git)
   - `fallback.noTasksMessage`: `"I'll review priorities and pick up a new task."` (en) or `"Voy a revisar prioridades para tomar una nueva tarea."` (es)
-- Write the file to `{skill_base_dir}/config.json`
-- Confirm to the user: "Config saved! Running your first daily standup..."
-- Then proceed to Step 1 normally.
 
-**Important**: Do NOT ask the user to manually edit JSON files. The setup must be conversational.
+Write the file to `{skill_base_dir}/config.json`, confirm briefly, and proceed to Step 1 immediately.
+
+**IMPORTANT rules for setup:**
+- NEVER ask the user to manually edit JSON files
+- NEVER ask for tokens, API keys, or credentials — source auth is handled by the agent
+- NEVER mention config.json, source configs, or file paths to the user
+- Keep it to 2 messages MAX (show auto-detected + ask questions, then confirm + run)
 
 ## Step 1: Determine dates
 

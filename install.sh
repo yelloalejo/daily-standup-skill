@@ -423,59 +423,15 @@ print_next_steps() {
   echo -e "${GREEN}${BOLD}✓ Installation complete!${NC}"
   echo -e "${CYAN}══════════════════════════════════════════════${NC}"
   echo ""
+  echo -e "  Type ${BOLD}/daily-standup${NC} in your agent to get started."
 
   if [ "$SKIP_CONFIG" = true ]; then
-    echo -e "  Config will be set up on first run via ${BOLD}/daily-standup${NC}"
-    echo ""
+    echo -e "  The skill will guide you through setup on first run."
+  else
+    echo -e "  Your config is ready — source auth will be handled"
+    echo -e "  automatically by your agent when needed."
   fi
 
-  if [ -n "$SOURCES_DIR" ]; then
-    echo -e "${BOLD}Next steps — Authenticate your sources:${NC}"
-    echo ""
-    echo -e "  ${BOLD}1. GitHub${NC}"
-    echo "     Create a Personal Access Token (classic or fine-grained):"
-    echo "     https://github.com/settings/tokens"
-    echo "     Then update the token in your source config or paste it"
-    echo "     when your agent asks."
-    echo ""
-
-    case "${TASK_PROVIDER:-none}" in
-      notion)
-        echo -e "  ${BOLD}2. Notion${NC}"
-        echo "     Create an integration at: https://notion.so/my-integrations"
-        echo "     Share your task database with the integration."
-        echo "     Then update the token in your source config."
-        echo ""
-        ;;
-      linear)
-        echo -e "  ${BOLD}2. Linear${NC}"
-        echo "     Authenticate via OAuth when your agent prompts you."
-        echo ""
-        ;;
-      jira)
-        echo -e "  ${BOLD}2. Jira${NC}"
-        echo "     Create an API token at:"
-        echo "     https://id.atlassian.com/manage-profile/security/api-tokens"
-        echo "     You'll need to set up the Jira source manually in your agent."
-        echo ""
-        ;;
-    esac
-
-    if [ "${CAL_PROVIDER:-none}" = "google-calendar" ]; then
-      local step_num=3
-      [ "${TASK_PROVIDER:-none}" = "none" ] && step_num=2
-      echo -e "  ${BOLD}${step_num}. Google Calendar${NC}"
-      echo "     Create OAuth credentials at Google Cloud Console:"
-      echo "     https://console.cloud.google.com/apis/credentials"
-      echo "     Enable the Google Calendar API, then authenticate"
-      echo "     via OAuth in your agent."
-      echo ""
-    fi
-  fi
-
-  echo -e "${CYAN}──────────────────────────────────────────────${NC}"
-  echo ""
-  echo -e "  Type ${BOLD}/daily-standup${NC} in your agent to get started"
   echo ""
   echo -e "  ${DIM}Skill: ${SKILL_DIR}${NC}"
   echo -e "  ${DIM}Repo:  ${REPO_URL}${NC}"
