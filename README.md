@@ -140,9 +140,9 @@ Want to add support for a new task management tool? Create a new adapter:
 
 ## Contributing
 
-This is an open-source project built for the community, and **every contribution matters** — whether it's a new adapter, a bug fix, a translation, or just an idea in the issues. If this skill saves you 5 minutes every morning, imagine what we can build together.
+This is an open-source project and **every contribution matters** — a new adapter, a bug fix, a translation, or just an idea in the issues. All welcome.
 
-Here are some ideas to get started:
+Some ideas to get started:
 
 - **New task adapters**: Asana, ClickUp, Todoist, Trello, Monday.com
 - **New calendar providers**: Outlook/Microsoft Calendar
@@ -150,7 +150,7 @@ Here are some ideas to get started:
 - **Improvements**: Better commit grouping, smarter summaries, new output formats
 - **Bug reports & ideas**: Open an [issue](https://github.com/yelloalejo/daily-standup-skill/issues) — feedback is just as valuable as code
 
-Don't hesitate to open a PR, no matter how small. First-time contributors are especially welcome. Let's make mornings easier for everyone.
+PRs of any size are welcome. Open an issue if you're unsure where to start.
 
 ## License
 

@@ -119,7 +119,7 @@ La autenticación de sources (GitHub, Notion, etc.) la maneja tu agente automát
 
 ## Contribuir
 
-Este es un proyecto open source hecho para la comunidad, y **cada aporte cuenta** — ya sea un nuevo adapter, un bug fix, una traducción, o simplemente una idea en los issues. Si este skill te ahorra 5 minutos cada mañana, imagina lo que podemos construir juntos.
+Este es un proyecto open source y **cada aporte cuenta** — un nuevo adapter, un bug fix, una traducción, o simplemente una idea en los issues. Todo es bienvenido.
 
 Algunas ideas para empezar:
 
@@ -129,7 +129,7 @@ Algunas ideas para empezar:
 - **Mejoras**: Mejor agrupación de commits, resúmenes más inteligentes, nuevos formatos de salida
 - **Reportes de bugs e ideas**: Abre un [issue](https://github.com/yelloalejo/daily-standup-skill/issues) — el feedback vale tanto como el código
 
-No dudes en abrir un PR, sin importar qué tan pequeño sea. Los que contribuyen por primera vez son especialmente bienvenidos. Hagamos que las mañanas sean más fáciles para todos.
+PRs de cualquier tamaño son bienvenidos. Abre un issue si no sabes por dónde empezar.
 
 ## Licencia
 
