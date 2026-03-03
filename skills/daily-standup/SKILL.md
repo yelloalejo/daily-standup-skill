@@ -255,6 +255,23 @@ Produce the output in `config.output.language` (default: "en"). Use the template
 
 ---
 
+## Handling source auth failures
+
+When a source call fails (tool not found, auth error, connection error), **do NOT stop**. Handle gracefully:
+
+1. **Git commits always work** — local `git log` never needs auth. Use it as the reliable fallback even if GitHub MCP fails.
+
+2. **If GitHub MCP fails**: Use only local git log. Add a brief note at the end:
+   > ℹ️ GitHub source not connected — showing local commits only. Ask your agent to set up the GitHub source for remote branch data.
+
+3. **If task source fails** (Notion/Linear/Jira): Skip the tasks section. Add a brief note:
+   > ℹ️ {Provider} not connected yet — ask your agent to set up the {provider} source to include tasks.
+
+4. **If Google Calendar fails**: Skip the meetings section. Add a brief note:
+   > ℹ️ Google Calendar not connected — ask your agent to set up the Google Calendar source to include meetings.
+
+**Key principle**: Always produce a useful summary with whatever sources are available. A standup with just commits is still valuable. Never block on missing sources.
+
 ## Important rules
 
 - The natural language summary must be **concise and natural**, as if the user were saying it out loud.
