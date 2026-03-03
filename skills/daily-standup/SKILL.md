@@ -99,7 +99,7 @@ Write the file to `{skill_base_dir}/config.json`, confirm briefly, and proceed t
 
 **IMPORTANT rules for setup:**
 - NEVER ask the user to manually edit JSON files
-- NEVER ask for tokens, API keys, or credentials — source auth is handled by the agent
+- NEVER ask for tokens, API keys, or credentials during setup — auth is handled later if needed (see "Handling source auth failures")
 - NEVER mention config.json, source configs, or file paths to the user
 - Keep it to 2 messages MAX (show auto-detected + ask questions, then confirm + run)
 
@@ -261,16 +261,108 @@ When a source call fails (tool not found, auth error, connection error), **do NO
 
 1. **Git commits always work** — local `git log` never needs auth. Use it as the reliable fallback even if GitHub MCP fails.
 
-2. **If GitHub MCP fails**: Use only local git log. Add a brief note at the end:
-   > ℹ️ GitHub source not connected — showing local commits only. Ask your agent to set up the GitHub source for remote branch data.
+2. **Generate the summary first** with whatever sources ARE working. Always produce a useful output.
 
-3. **If task source fails** (Notion/Linear/Jira): Skip the tasks section. Add a brief note:
-   > ℹ️ {Provider} not connected yet — ask your agent to set up the {provider} source to include tasks.
-
-4. **If Google Calendar fails**: Skip the meetings section. Add a brief note:
-   > ℹ️ Google Calendar not connected — ask your agent to set up the Google Calendar source to include meetings.
+3. **After the summary**, for each source that failed, run the **in-chat token setup** flow described below.
 
 **Key principle**: Always produce a useful summary with whatever sources are available. A standup with just commits is still valuable. Never block on missing sources.
+
+### In-chat token setup
+
+When a source is not authenticated, guide the user to generate the token and paste it directly in the chat. **Never** ask the user to edit config files or env vars manually — the agent handles that.
+
+After receiving a token, write it to the source config file (e.g., update the `env` field in the source's `config.json`) or use the agent's credential tools if available (e.g., `source_credential_prompt`, `source_oauth_trigger`).
+
+#### GitHub (PAT)
+
+Show this message:
+
+> **GitHub** needs a Personal Access Token to fetch remote commits across branches.
+>
+> 1. Go to: **https://github.com/settings/tokens?type=beta**
+> 2. Click **"Generate new token"**
+> 3. Give it a name (e.g., "Daily Standup"), set expiration, and select your repository under **"Repository access"**
+> 4. Under **Permissions → Repository permissions**, enable **Contents** (read-only)
+> 5. Click **"Generate token"** and copy it
+>
+> Paste the token here and I'll set it up:
+
+When the user pastes the token, write it to the GitHub source config (replace `GITHUB_PERSONAL_ACCESS_TOKEN` value) and confirm briefly: "GitHub connected! ✓"
+
+#### Notion (Integration Token)
+
+Show this message:
+
+> **Notion** needs an integration token to read your task board.
+>
+> 1. Go to: **https://www.notion.so/my-integrations**
+> 2. Click **"New integration"**
+> 3. Give it a name (e.g., "Daily Standup"), select your workspace, and click **"Submit"**
+> 4. Copy the **Internal Integration Secret** (starts with `ntn_`)
+> 5. Then open your tasks database in Notion, click **⋯ → Connections → Connect to** and select the integration you just created
+>
+> Paste the token here and I'll set it up:
+
+When the user pastes the token, write it to the Notion source config (replace `NOTION_TOKEN` value) and confirm briefly: "Notion connected! ✓"
+
+#### Linear (OAuth or API key)
+
+If the agent supports OAuth triggers (e.g., `source_oauth_trigger`), use that — Linear supports OAuth natively at `https://mcp.linear.app`. No manual token needed.
+
+If OAuth is not available, show this message:
+
+> **Linear** needs an API key to fetch your cycle issues.
+>
+> 1. Go to: **https://linear.app/settings/account/api**
+> 2. Click **"Create key"**
+> 3. Give it a label (e.g., "Daily Standup") and click **"Create"**
+> 4. Copy the key
+>
+> Paste the API key here and I'll set it up:
+
+When the user pastes the key, write it to the Linear source config and confirm briefly: "Linear connected! ✓"
+
+#### Google Calendar (OAuth)
+
+If the agent supports Google OAuth triggers (e.g., `source_google_oauth_trigger`), use that — it handles the full OAuth flow automatically. Just trigger it and confirm.
+
+If OAuth triggers are not available, show this message:
+
+> **Google Calendar** needs OAuth credentials to read your events.
+>
+> 1. Go to: **https://console.cloud.google.com/apis/credentials**
+> 2. Create a project (or select an existing one)
+> 3. Enable the **Google Calendar API** at: **https://console.cloud.google.com/apis/library/calendar-json.googleapis.com**
+> 4. Go back to **Credentials** → **Create Credentials** → **OAuth client ID**
+> 5. Application type: **Desktop app**, name it (e.g., "Daily Standup")
+> 6. Copy the **Client ID** and **Client Secret**
+>
+> Paste both values here (Client ID first, then Client Secret) and I'll set it up:
+
+When the user pastes the credentials, write them to the Google Calendar source config (`googleOAuthClientId` and `googleOAuthClientSecret`) and then trigger the OAuth authentication flow if the agent supports it.
+
+#### Jira (API Token)
+
+Show this message:
+
+> **Jira** needs an API token to fetch your sprint tickets.
+>
+> 1. Go to: **https://id.atlassian.com/manage-profile/security/api-tokens**
+> 2. Click **"Create API token"**
+> 3. Give it a label (e.g., "Daily Standup") and click **"Create"**
+> 4. Copy the token
+>
+> Paste the token here and I'll set it up:
+
+When the user pastes the token, write it to the Jira source config and confirm briefly: "Jira connected! ✓"
+
+### Important rules for token setup
+
+- **NEVER** show file paths, config keys, or JSON to the user
+- **NEVER** ask the user to manually edit files
+- After setting up a token, immediately retry the failed query so the user sees results right away
+- If a source uses OAuth and the agent supports OAuth triggers, prefer that over manual tokens
+- One message per source — don't overwhelm with multiple setup flows at once. Set up the most critical source first (usually the task provider), then offer to set up others
 
 ## Important rules
 
