@@ -24,6 +24,7 @@ CRAFT_DIR="$HOME/.craft-agent/workspaces"
 INSTALL_MODE=""          # "global" or "workspace"
 TARGET_WORKSPACE=""      # specific workspace name
 SKIP_CONFIG=false
+UPDATE_MODE=false
 
 # Colors
 RED='\033[0;31m'
@@ -49,6 +50,11 @@ parse_args() {
         TARGET_WORKSPACE="${2:-}"
         shift 2
         ;;
+      --update|-u)
+        UPDATE_MODE=true
+        SKIP_CONFIG=true
+        shift
+        ;;
       --skip-config)
         SKIP_CONFIG=true
         shift
@@ -59,6 +65,7 @@ parse_args() {
         echo "Options:"
         echo "  --global, -g              Install globally (~/.agents/skills/) — works with all agents"
         echo "  --workspace, -w <name>    Install to a specific Craft Agent workspace"
+        echo "  --update, -u              Update skill files only (preserves your config.json)"
         echo "  --skip-config             Skip config wizard (configure later via /daily-standup)"
         echo "  --help, -h                Show this help"
         exit 0
@@ -75,12 +82,20 @@ parse_args() {
 
 print_banner() {
   echo ""
-  echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║${NC}  ${BOLD}📋 Daily Standup Skill — Installer${NC}          ${CYAN}║${NC}"
-  echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
-  echo ""
-  echo -e "${DIM}Automate your daily standup summary with${NC}"
-  echo -e "${DIM}Git commits, tasks, and calendar events.${NC}"
+  if [ "$UPDATE_MODE" = true ]; then
+    echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║${NC}  ${BOLD}📋 Daily Standup Skill — Updater${NC}           ${CYAN}║${NC}"
+    echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${DIM}Updating skill files (your config is preserved).${NC}"
+  else
+    echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║${NC}  ${BOLD}📋 Daily Standup Skill — Installer${NC}          ${CYAN}║${NC}"
+    echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${DIM}Automate your daily standup summary with${NC}"
+    echo -e "${DIM}Git commits, tasks, and calendar events.${NC}"
+  fi
   echo ""
 }
 
@@ -354,6 +369,82 @@ generate_config() {
 HEREDOC
 }
 
+# ─── Update mode ─────────────────────────────
+
+find_existing_installations() {
+  local found=()
+
+  # Check global
+  if [ -f "$GLOBAL_SKILLS_DIR/$SKILL_SLUG/SKILL.md" ]; then
+    found+=("global:$GLOBAL_SKILLS_DIR/$SKILL_SLUG")
+  fi
+
+  # Check Craft Agent workspaces
+  if [ -d "$CRAFT_DIR" ]; then
+    for dir in "$CRAFT_DIR"/*/skills/$SKILL_SLUG; do
+      if [ -f "$dir/SKILL.md" ] 2>/dev/null; then
+        local ws_name
+        ws_name=$(echo "$dir" | sed "s|$CRAFT_DIR/||;s|/skills/$SKILL_SLUG||")
+        found+=("workspace:$ws_name:$dir")
+      fi
+    done
+  fi
+
+  echo "${found[@]}"
+}
+
+run_update() {
+  local installations
+  installations=($(find_existing_installations))
+
+  if [ ${#installations[@]} -eq 0 ]; then
+    echo -e "${RED}✗ No existing installation found.${NC}"
+    echo -e "  Run without ${BOLD}--update${NC} to install for the first time."
+    exit 1
+  fi
+
+  for entry in "${installations[@]}"; do
+    local type="${entry%%:*}"
+    local rest="${entry#*:}"
+
+    if [ "$type" = "global" ]; then
+      local path="$rest"
+      echo -e "  ${BOLD}Updating global installation...${NC}"
+      update_skill_files "$path"
+    elif [ "$type" = "workspace" ]; then
+      local ws_name="${rest%%:*}"
+      local path="${rest#*:}"
+      echo -e "  ${BOLD}Updating workspace ${ws_name}...${NC}"
+      update_skill_files "$path"
+    fi
+  done
+
+  echo ""
+  echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+  echo -e "${GREEN}${BOLD}✓ Update complete!${NC}"
+  echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "  Your ${BOLD}config.json${NC} was preserved."
+  echo -e "  Updated: SKILL.md, adapters, icon"
+  echo ""
+}
+
+update_skill_files() {
+  local target_dir="$1"
+
+  mkdir -p "$target_dir/adapters"
+
+  download_file "skills/daily-standup/SKILL.md" "$target_dir/SKILL.md"
+  download_file "skills/daily-standup/icon.svg" "$target_dir/icon.svg"
+  download_file "skills/daily-standup/config.example.json" "$target_dir/config.example.json"
+
+  for adapter in notion linear github-issues jira; do
+    download_file "skills/daily-standup/adapters/${adapter}.md" "$target_dir/adapters/${adapter}.md"
+  done
+
+  echo -e "  ${GREEN}✓${NC} Skill files updated"
+}
+
 # ─── Installation ───────────────────────────
 
 install_skill() {
@@ -445,21 +536,25 @@ main() {
   print_banner
   check_dependencies
 
-  choose_install_target
-  echo ""
+  if [ "$UPDATE_MODE" = true ]; then
+    run_update
+  else
+    choose_install_target
+    echo ""
 
-  install_skill
+    install_skill
 
-  if [ "$SKIP_CONFIG" = false ]; then
-    step_user_info
-    step_git_config
-    step_task_provider
-    step_calendar_config
-    generate_config
-    install_sources
+    if [ "$SKIP_CONFIG" = false ]; then
+      step_user_info
+      step_git_config
+      step_task_provider
+      step_calendar_config
+      generate_config
+      install_sources
+    fi
+
+    print_next_steps
   fi
-
-  print_next_steps
 }
 
 main "$@"

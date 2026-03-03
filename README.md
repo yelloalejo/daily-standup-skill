@@ -38,6 +38,16 @@ npx skills add yelloalejo/daily-standup-skill
 
 > Installs the skill files globally. Configuration is done interactively on first run via `/daily-standup`.
 
+## Update
+
+Already installed? Update to the latest version without losing your config:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yelloalejo/daily-standup-skill/main/install.sh | bash -s -- --update
+```
+
+This updates SKILL.md, adapters, and icon — your `config.json` is preserved.
+
 ## Usage
 
 In your AI agent, type:
