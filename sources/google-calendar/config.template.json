@@ -1,0 +1,20 @@
+{
+  "name": "Google Calendar",
+  "slug": "google-calendar",
+  "enabled": true,
+  "provider": "google",
+  "type": "api",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg",
+  "tagline": "Calendar events, meetings, and availability",
+  "api": {
+    "baseUrl": "https://www.googleapis.com/calendar/v3/",
+    "authType": "bearer",
+    "googleOAuthClientId": "__REPLACE_WITH_YOUR_CLIENT_ID__",
+    "googleOAuthClientSecret": "__REPLACE_WITH_YOUR_CLIENT_SECRET__",
+    "testEndpoint": {
+      "method": "GET",
+      "path": "calendars/primary"
+    }
+  },
+  "connectionStatus": "untested"
+}

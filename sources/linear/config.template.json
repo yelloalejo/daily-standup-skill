@@ -1,0 +1,14 @@
+{
+  "name": "Linear",
+  "slug": "linear",
+  "enabled": true,
+  "provider": "linear",
+  "type": "mcp",
+  "icon": "https://linear.app/static/favicon.svg",
+  "tagline": "Issue tracking, sprint planning, and project management",
+  "mcp": {
+    "url": "https://mcp.linear.app",
+    "authType": "oauth"
+  },
+  "connectionStatus": "untested"
+}

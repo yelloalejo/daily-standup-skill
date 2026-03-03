@@ -1,0 +1,7 @@
+{
+  "allowedMcpPatterns": [
+    { "pattern": "list", "comment": "All list operations (repos, issues, commits, PRs)" },
+    { "pattern": "get", "comment": "All get/read operations" },
+    { "pattern": "search", "comment": "All search operations" }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "user": {
+    "name": "Your Name",
+    "gitEmail": "you@example.com",
+    "calendarEmails": ["you@company.com", "you@gmail.com"]
+  },
+  "git": {
+    "provider": "github",
+    "owner": "your-org",
+    "repo": "your-repo",
+    "defaultBranch": "main"
+  },
+  "tasks": {
+    "provider": "notion",
+    "notion": {
+      "databaseId": "your-notion-database-id"
+    },
+    "linear": {
+      "teamId": "your-linear-team-id"
+    },
+    "github-issues": {
+      "owner": "your-org",
+      "repo": "your-repo",
+      "assignee": "your-github-username"
+    },
+    "jira": {
+      "baseUrl": "https://your-domain.atlassian.net",
+      "projectKey": "PROJ"
+    }
+  },
+  "calendar": {
+    "provider": "google-calendar",
+    "timezone": "America/New_York",
+    "ignoredPatterns": ["sync", "daily", "standup", "lunch"],
+    "ignoredEventTypes": ["outOfOffice"]
+  },
+  "output": {
+    "language": "en"
+  },
+  "fallback": {
+    "noTasksMessage": "I'll check with the team for my next task."
+  }
+}

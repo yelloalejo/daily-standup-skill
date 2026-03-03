@@ -1,0 +1,19 @@
+{
+  "name": "Notion",
+  "slug": "notion",
+  "enabled": true,
+  "provider": "notion",
+  "type": "mcp",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+  "tagline": "Task management and sprint board",
+  "mcp": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@notionhq/notion-mcp-server"],
+    "env": {
+      "NOTION_TOKEN": "__REPLACE_WITH_YOUR_TOKEN__"
+    },
+    "authType": "none"
+  },
+  "connectionStatus": "untested"
+}

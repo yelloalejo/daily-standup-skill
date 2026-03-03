@@ -1,0 +1,19 @@
+{
+  "name": "GitHub",
+  "slug": "github",
+  "enabled": true,
+  "provider": "github",
+  "type": "mcp",
+  "icon": "https://github.githubassets.com/favicons/favicon-dark.svg",
+  "tagline": "Repository management, issues, pull requests, and code search",
+  "mcp": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-github"],
+    "env": {
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "__REPLACE_WITH_YOUR_PAT__"
+    },
+    "authType": "none"
+  },
+  "connectionStatus": "untested"
+}

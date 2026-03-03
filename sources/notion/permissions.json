@@ -1,0 +1,9 @@
+{
+  "allowedMcpPatterns": [
+    { "pattern": "search", "comment": "Search pages and databases" },
+    { "pattern": "retrieve", "comment": "Retrieve pages, blocks, and properties" },
+    { "pattern": "query", "comment": "Query databases and data sources" },
+    { "pattern": "get", "comment": "Get operations" },
+    { "pattern": "list", "comment": "List operations" }
+  ]
+}
