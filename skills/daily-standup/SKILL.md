@@ -13,7 +13,7 @@ Generate a complete summary for daily standup meetings by pulling data from Git 
 
 ## Required connections
 
-This skill needs the following sources configured in Craft Agent:
+This skill needs the following MCP sources configured:
 
 | Source | Required | Purpose |
 |--------|----------|---------|

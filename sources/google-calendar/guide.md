@@ -32,4 +32,4 @@ List events from the primary calendar.
 1. Create OAuth credentials at [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (Desktop app type)
 2. Enable the Google Calendar API
 3. Add your Client ID and Client Secret to the source config
-4. Authenticate via OAuth in Craft Agent
+4. Authenticate via OAuth in your agent

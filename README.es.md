@@ -2,7 +2,7 @@
 
 > Automatiza tu resumen para la daily — commits, tareas y eventos del calendario en un solo comando.
 
-Un skill de [Craft Agent](https://craft.do/agents) que genera tu reporte de daily standup usando datos de Git, tu gestor de tareas y tu calendario. Funciona con **Notion**, **Linear**, **GitHub Issues** y **Jira**.
+Un skill para agentes de IA que genera tu reporte de daily standup usando datos de Git, tu gestor de tareas y tu calendario. Funciona con **Notion**, **Linear**, **GitHub Issues** y **Jira**. Compatible con [Craft Agent](https://craft.do/agents), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.sh) y cualquier agente que soporte el [formato SKILL.md](https://skills.sh).
 
 [Read in English](README.md)
 
@@ -30,7 +30,7 @@ npx skills add yelloalejo/daily-standup-skill
 
 ## Uso
 
-Abre Craft Agent y escribe:
+En tu agente de IA, escribe:
 
 ```
 /daily-standup
@@ -81,7 +81,7 @@ Ver [config.example.json](skills/daily-standup/config.example.json) para el esqu
 
 ## Autenticación de Sources
 
-Después de instalar, necesitas autenticar cada source en Craft Agent:
+Después de instalar, necesitas autenticar cada source en tu agente:
 
 ### GitHub
 1. Crea un [Personal Access Token](https://github.com/settings/tokens) con acceso a repos
@@ -93,13 +93,13 @@ Después de instalar, necesitas autenticar cada source en Craft Agent:
 3. Actualiza el token en el config de la source
 
 ### Linear
-1. La autenticación es via OAuth — Craft Agent te pedirá iniciar sesión
+1. La autenticación es via OAuth — tu agente te pedirá iniciar sesión
 
 ### Google Calendar
 1. Crea credenciales OAuth en [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Habilita la Google Calendar API
 3. Actualiza Client ID y Secret en el config de la source
-4. Autentícate via OAuth en Craft Agent
+4. Autentícate via OAuth en tu agente
 
 ## Agregar un adapter personalizado
 

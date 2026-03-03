@@ -61,8 +61,8 @@ check_dependencies() {
 
 detect_workspace() {
   if [ ! -d "$CRAFT_DIR" ]; then
-    echo -e "${RED}✗ Craft Agent not found at $CRAFT_DIR${NC}"
-    echo "  Install Craft Agent first: https://craft.do/agents"
+    echo -e "${RED}✗ Craft Agent workspace not found at $CRAFT_DIR${NC}"
+    echo "  This installer targets Craft Agent. For other agents, use: npx skills add yelloalejo/daily-standup-skill"
     exit 1
   fi
 
@@ -211,9 +211,9 @@ generate_config() {
     cal_emails_json+="\"$email\""
   done
 
-  local fallback_msg="I'll check with the team for my next task."
+  local fallback_msg="I'll review priorities and pick up a new task."
   if [ "$LANG_PREF" = "es" ]; then
-    fallback_msg="Voy a revisar con el equipo con qué tarea sigo."
+    fallback_msg="Voy a revisar prioridades para tomar una nueva tarea."
   fi
 
   local tasks_block="\"provider\": \"$TASK_PROVIDER\""
@@ -328,7 +328,7 @@ print_next_steps() {
   echo "     Create a Personal Access Token (classic or fine-grained):"
   echo "     https://github.com/settings/tokens"
   echo "     Then update the token in your source config or paste it"
-  echo "     when Craft Agent asks."
+  echo "     when your agent asks."
   echo ""
 
   case "$TASK_PROVIDER" in
@@ -341,14 +341,14 @@ print_next_steps() {
       ;;
     linear)
       echo -e "  ${BOLD}2. Linear${NC}"
-      echo "     Authenticate via OAuth when Craft Agent prompts you."
+      echo "     Authenticate via OAuth when your agent prompts you."
       echo ""
       ;;
     jira)
       echo -e "  ${BOLD}2. Jira${NC}"
       echo "     Create an API token at:"
       echo "     https://id.atlassian.com/manage-profile/security/api-tokens"
-      echo "     You'll need to set up the Jira source manually in Craft Agent."
+      echo "     You'll need to set up the Jira source manually in your agent."
       echo ""
       ;;
   esac
@@ -360,13 +360,13 @@ print_next_steps() {
     echo "     Create OAuth credentials at Google Cloud Console:"
     echo "     https://console.cloud.google.com/apis/credentials"
     echo "     Enable the Google Calendar API, then authenticate"
-    echo "     via OAuth in Craft Agent."
+    echo "     via OAuth in your agent."
     echo ""
   fi
 
   echo -e "${CYAN}──────────────────────────────────────────────${NC}"
   echo ""
-  echo -e "  Open Craft Agent and type ${BOLD}/daily-standup${NC}"
+  echo -e "  Open your agent and type ${BOLD}/daily-standup${NC}"
   echo ""
   echo -e "  ${DIM}Skill: ${SKILL_DIR}${NC}"
   echo -e "  ${DIM}Repo:  ${REPO_URL}${NC}"
@@ -379,7 +379,7 @@ main() {
   print_banner
   check_dependencies
 
-  echo -e "${BOLD}Detecting Craft Agent...${NC}"
+  echo -e "${BOLD}Detecting workspace...${NC}"
   detect_workspace
   echo ""
 

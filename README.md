@@ -2,7 +2,7 @@
 
 > Automate your daily standup summary — commits, tasks, and calendar events in one command.
 
-A [Craft Agent](https://craft.do/agents) skill that generates your daily standup report by pulling data from Git, your task manager, and your calendar. Works with **Notion**, **Linear**, **GitHub Issues**, and **Jira**.
+An AI agent skill that generates your daily standup report by pulling data from Git, your task manager, and your calendar. Works with **Notion**, **Linear**, **GitHub Issues**, and **Jira**. Compatible with [Craft Agent](https://craft.do/agents), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.sh), and any agent that supports the [SKILL.md format](https://skills.sh).
 
 [Leer en español](README.es.md)
 
@@ -30,7 +30,7 @@ npx skills add yelloalejo/daily-standup-skill
 
 ## Usage
 
-Open Craft Agent and type:
+In your AI agent, type:
 
 ```
 /daily-standup
@@ -81,7 +81,7 @@ See [config.example.json](skills/daily-standup/config.example.json) for the full
 
 ## Source Authentication
 
-After installing, you need to authenticate each source in Craft Agent:
+After installing, you need to authenticate each source in your agent:
 
 ### GitHub
 1. Create a [Personal Access Token](https://github.com/settings/tokens) with repo access
@@ -93,13 +93,13 @@ After installing, you need to authenticate each source in Craft Agent:
 3. Update the token in the Notion source config
 
 ### Linear
-1. Authentication is handled via OAuth — Craft Agent will prompt you
+1. Authentication is handled via OAuth — your agent will prompt you
 
 ### Google Calendar
 1. Create OAuth credentials at [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Enable the Google Calendar API
 3. Update Client ID and Secret in the source config
-4. Authenticate via OAuth in Craft Agent
+4. Authenticate via OAuth in your agent
 
 ## Adding a Custom Adapter
 
@@ -123,7 +123,7 @@ Want to add support for a new task management tool? Create a new adapter:
 │       ├── linear.md
 │       ├── github-issues.md
 │       └── jira.md
-├── sources/                  # Craft Agent source templates
+├── sources/                  # MCP source templates
 │   ├── github/
 │   ├── notion/
 │   ├── linear/

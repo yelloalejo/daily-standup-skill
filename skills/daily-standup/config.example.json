@@ -38,6 +38,6 @@
     "language": "en"
   },
   "fallback": {
-    "noTasksMessage": "I'll check with the team for my next task."
+    "noTasksMessage": "I'll review priorities and pick up a new task."
   }
 }

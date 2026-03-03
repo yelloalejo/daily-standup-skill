@@ -16,5 +16,5 @@ Access to issues, projects, and cycles associated with the authenticated user's 
 
 ## Setup
 
-1. Authentication is handled via OAuth — Craft Agent will prompt you to log in to Linear
+1. Authentication is handled via OAuth — your agent will prompt you to log in to Linear
 2. No token needed — just authenticate when prompted
